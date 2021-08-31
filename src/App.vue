@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <Graph msg="Welcome to Your Vue.js + TypeScript App">
-      console.log('Code in the slot');
+    <Graph>
+      [{"country":"USA","value":20.5},{"country":"China","value":13.4},{"country":"Germany","value":4},{"country":"Japan","value":4.9},{"country":"France","value":2.8}]
     </Graph>
   </div>
 </template>

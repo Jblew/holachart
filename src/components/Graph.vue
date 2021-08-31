@@ -1,19 +1,21 @@
 <template>
-  <div class="hello">
-    <h1>Demo: {{ msg }}</h1>
-    <pre>
-# Data in the slot
-{{ slotContentsParsed }}
-    </pre>
+  <div class="graph">
+    The graph:
+    <CirclePack v-if="jsonData" :data="jsonData" />
+    <span v-else>Data for holachart-graph missing or invalid JSON</span>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
+import CirclePack from "@/circle-pack/CirclePack.vue";
 
-@Component
+@Component({
+  components: {
+    CirclePack,
+  },
+})
 export default class Graph extends Vue {
-  @Prop() private msg!: string;
   private slotContents = "";
 
   mounted(): void {
@@ -32,12 +34,9 @@ export default class Graph extends Vue {
     setTimeout(() => this._populateSlotContents(), 25);
   }
 
-  get slotContentsParsed(): string {
-    if (!this.slotContents) return "Empty slot";
-    return this.slotContents
-      .split("\n")
-      .map((line, i) => `${i + 1}. ${line.trim()}`)
-      .join("\n");
+  get jsonData(): unknown | undefined {
+    if (!this.slotContents) return undefined;
+    return JSON.parse(this.slotContents.trim());
   }
 }
 </script>
