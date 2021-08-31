@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <Graph msg="Welcome to Your Vue.js + TypeScript App" />
+    <Graph msg="Welcome to Your Vue.js + TypeScript App">
+      console.log('Code in the slot');
+    </Graph>
   </div>
 </template>
 
