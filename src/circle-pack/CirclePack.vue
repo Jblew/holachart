@@ -16,67 +16,166 @@ export default class Graph extends Vue {
 
   _buildGraph(): void {
     console.log("Building holachart graph circlepack for:", this.data);
-    const w = 500;
-    const h = 500;
+    const svg = this._buildGraphSVG();
+    (this.$refs.dst as any).appendChild(svg.node());
+  }
 
-    const svg = d3
-      .create("svg")
-      .attr("width", w)
-      .attr("height", h);
+  _buildGraphSVG(): any {
+    var svg = d3
+        .create("svg")
+        .attr("width", 960)
+        .attr("height", 960),
+      margin = 20,
+      diameter = +svg.attr("width"),
+      g = svg
+        .append("g")
+        .attr(
+          "transform",
+          "translate(" + diameter / 2 + "," + diameter / 2 + ")"
+        );
 
-    const sortedGDP = this.data.sort((a: any, b: any) =>
-      a.value > b.value ? 1 : -1
-    );
-    const color = d3.scaleOrdinal(d3.schemeDark2);
-
-    const max_gdp = d3.max(sortedGDP, (o: any) => o.value);
-
-    const angleScale = d3
+    var color = d3
       .scaleLinear()
-      .domain([0, max_gdp as any])
-      .range([0, 1.5 * Math.PI]);
+      .domain([-1, 5])
+      .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"] as any)
+      .interpolate(d3.interpolateHcl as any);
 
-    const arc = d3
-      .arc()
-      .innerRadius((d: any, i: any) => (i + 1) * 25)
-      .outerRadius((d: any, i: any) => (i + 2) * 25)
-      .startAngle(angleScale(0))
-      .endAngle((d: any) => angleScale(d.value));
+    var pack = d3
+      .pack()
+      .size([diameter - margin, diameter - margin])
+      .padding(2);
 
-    const g = svg.append("g");
-
-    g.selectAll("path")
-      .data(sortedGDP)
-      .enter()
-      .append("path")
-      .attr("d", arc as any)
-      .attr("fill", (d: any, i: any) => color(i))
-      .attr("stroke", "#FFF")
-      .attr("stroke-width", "1px")
-      .on("mouseenter", function(this: any) {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr("opacity", 0.5);
+    let root = this.data;
+    root = d3
+      .hierarchy(root)
+      .sum(function(d) {
+        return d.size;
       })
-      .on("mouseout", function(this: any) {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr("opacity", 1);
+      .sort(function(a: any, b: any) {
+        return b.value - a.value;
       });
 
-    g.selectAll("text")
-      .data(this.data)
+    var focus = root,
+      nodes = pack(root).descendants(),
+      view: any;
+
+    var circle = g
+      .selectAll("circle")
+      .data(nodes)
+      .enter()
+      .append("circle")
+      .attr("class", function(d) {
+        return d.parent
+          ? d.children
+            ? "node"
+            : "node node--leaf"
+          : "node node--root";
+      })
+      .style("fill", function(d) {
+        return d.children ? color(d.depth) : null;
+      })
+      .on("click", function(d) {
+        console.log("Click");
+        if (focus !== d) zoom(d);
+      });
+
+    var text = g
+      .selectAll("text")
+      .data(nodes)
       .enter()
       .append("text")
-      .text((d: any) => `${d.country} -  ${d.value} Trillion`)
-      .attr("x", -150)
-      .attr("dy", -8)
-      .attr("y", (d: any, i: any) => -(i + 1) * 25);
+      .attr("class", "label")
+      .style("fill-opacity", function(d) {
+        return d.parent === root ? 1 : 0;
+      })
+      .style("display", function(d) {
+        return d.parent === root ? "inline" : "none";
+      })
+      .text(function(d) {
+        return (d.data as any).name;
+      });
 
-    g.attr("transform", "translate(200,300)");
-    (this.$refs.dst as any).appendChild(svg.node());
+    var node = g.selectAll("circle,text");
+
+    svg.style("background", color(-1)).on("click", function() {
+      zoom(root);
+    });
+
+    zoomTo([root.x, root.y, root.r * 2 + margin]);
+
+    function zoom(d: any) {
+      console.log("Zoom", d);
+      var focus0 = focus;
+      focus = d;
+
+      var transition = d3
+        .transition()
+        .duration(750)
+        .tween("zoom", function(d: any) {
+          var i = d3.interpolateZoom(view, [
+            focus.x,
+            focus.y,
+            focus.r * 2 + margin,
+          ]);
+          console.log("Zoom tween", view);
+          return function(t) {
+            zoomTo(i(t));
+          };
+        });
+
+      transition
+        .selectAll("text")
+        .filter(function(this: any, d: any) {
+          return d.parent === focus || this.style.display === "inline";
+        })
+        .style("fill-opacity", function(this: any, d: any) {
+          return d.parent === focus ? 1 : 0;
+        })
+        .on("start", function(this: any, d: any) {
+          if (d.parent === focus) this.style.display = "inline";
+        })
+        .on("end", function(this: any, d: any) {
+          if (d.parent !== focus) this.style.display = "none";
+        });
+    }
+
+    function zoomTo(v: any) {
+      var k = diameter / v[2];
+      view = v;
+      node.attr("transform", function(d: any) {
+        return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")";
+      });
+      circle.attr("r", function(d) {
+        return d.r * k;
+      });
+    }
+    return svg;
   }
 }
 </script>
+<style>
+.node {
+  cursor: pointer;
+}
+
+.node:hover {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.node--leaf {
+  fill: white;
+}
+
+.label {
+  font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-anchor: middle;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+}
+
+.label,
+.node--root,
+.node--leaf {
+  pointer-events: none;
+}
+</style>
