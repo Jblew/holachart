@@ -1,0 +1,69 @@
+{
+  "name": "Million Years",
+  "mtp": "Save one million years of human life with behavioural design",
+  "anchor": {
+    "name": "Anchor circle",
+    "purpose": "Contains all the roles and circles.",
+    "domains": [],
+    "accountabilities": [],
+    "roles": [
+      {
+        "name": "employee",
+        "purpose": "Responsibilities of every employee",
+        "domains": ["Employee dashboard", "Feedback dashboard"],
+        "accountabilities": [],
+        "processes": [
+          {
+            "name": "Complaint",
+            "purpose": "Complain about the company",
+            "mermaid": "graph LR\n    FillForm[Employee fills complaint ticket] --> ComplaintKanban[Complaint kanban]\n    ComplaintKanban --> Review{Review by CEO}\n    Review --> Rejection\n    Review --> Acceptance\n    Rejection --> RejectionComment[Commente on issue]\n    Acceptance --> AcceptanceComment[Comment on issue]\n    Acceptance --> Tasks[New tasks specified]",
+            "roles": ["employee"]
+          },
+          {
+            "name": "Feedback",
+            "purpose": "Comment on somebody others work",
+            "mermaid": "graph LR\n    FillFeedback[Employee fills<br /> feedback form] --> Approve[HR checks compliancy<br />with Feedback Rules]\n    Approve -->|Approved| Appears[Posted on<br />Feedback wall]",
+            "roles": ["employee"]
+          }
+        ]
+      },
+      {
+        "name": "CEO",
+        "purpose": "Manage the company",
+        "domains": ["Management", "Company"],
+        "accountabilities": [
+          "Address all complaints",
+          "Manage company",
+          "Provide guidance"
+        ],
+        "processes": [
+          {
+            "name": "Complaint",
+            "purpose": "Complain about the company",
+            "mermaid": "graph LR\n    FillForm[Employee fills complaint ticket] --> ComplaintKanban[Complaint kanban]\n    ComplaintKanban --> Review{Review by CEO}\n    Review --> Rejection\n    Review --> Acceptance\n    Rejection --> RejectionComment[Commente on issue]\n    Acceptance --> AcceptanceComment[Comment on issue]\n    Acceptance --> Tasks[New tasks specified]",
+            "roles": ["employee"]
+          }
+        ]
+      },
+      {
+        "name": "HR",
+        "purpose": "Responsible for human resources: recruitment, well being",
+        "domains": ["HR"],
+        "accountabilities": [
+          "Recruit new employees",
+          "Evaluate employee performance",
+          "Care for employee wellbeing",
+          "Approve inter-employee feedback"
+        ],
+        "processes": [
+          {
+            "name": "Feedback",
+            "purpose": "Comment on somebody others work",
+            "mermaid": "graph LR\n    FillFeedback[Employee fills<br /> feedback form] --> Approve[HR checks compliancy<br />with Feedback Rules]\n    Approve -->|Approved| Appears[Posted on<br />Feedback wall]",
+            "roles": ["employee"]
+          }
+        ]
+      }
+    ]
+  }
+}
